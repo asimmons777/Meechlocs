@@ -18,6 +18,7 @@ tmp/
 # environment
 .env
 .env.*
+!**/.env.example
 
 # local uploads (demo)
 apps/web/public/uploads/

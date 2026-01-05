@@ -12,11 +12,24 @@ model User {
   email            String    @unique
   passwordHash     String
   name             String?
+  phone            String?
+  verifiedAt       DateTime?
   role             Role      @default(USER)
   isGuest          Boolean   @default(false)
   stripeCustomerId String?
   createdAt        DateTime  @default(now())
   appointments     Appointment[]
+}
+
+model RegistrationCode {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  phone        String?
+  name         String?
+  passwordHash String
+  codeHash     String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
 }
 
 model Service {

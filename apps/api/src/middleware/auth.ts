@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'devsecret'
+import { JWT_SECRET } from '../utils/auth'
 
 export interface AuthRequest extends Request {
   user?: any
+  file?: Express.Multer.File
 }
 
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {

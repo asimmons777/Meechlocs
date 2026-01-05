@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'devsecret';
+export const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || 'devsecret';
 
-export function signToken(payload: object, expiresIn = '7d') {
+export function signToken(payload: object, expiresIn: jwt.SignOptions['expiresIn'] = '7d') {
   return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 

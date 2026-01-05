@@ -1,0 +1,11 @@
+# Railway uses Nixpacks by default for Node projects.
+# This file makes the build/start steps explicit.
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run prisma:generate", "npm run build"]
+
+[start]
+cmd = "npm start"

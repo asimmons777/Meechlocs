@@ -7,6 +7,7 @@
     "dev:api": "npm --prefix ./apps/api run dev",
     "dev:web": "npm --prefix ./apps/web run dev",
     "dev:all": "bash ./scripts/run-dev.sh --detach",
+    "predeploy:check": "bash ./scripts/predeploy-check.sh",
     "simulate": "bash ./scripts/simulate-checkout.sh"
   },
   "devDependencies": {

@@ -11,7 +11,14 @@ import availabilityRoutes from './routes/availability'
 import paymentsRoutes from './routes/payments'
 
 const app = express()
-app.use(cors())
+
+const corsOriginEnv = (process.env.CORS_ORIGIN || '').trim()
+if (corsOriginEnv && corsOriginEnv !== '*') {
+  const origins = corsOriginEnv.split(',').map(o => o.trim()).filter(Boolean)
+  app.use(cors({ origin: origins, credentials: true }))
+} else {
+  app.use(cors())
+}
 app.use(express.json())
 
 // API routes

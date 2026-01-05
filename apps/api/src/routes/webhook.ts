@@ -98,7 +98,7 @@ router.post('/', async (req, res) => {
             const subject = `Booking confirmed: ${ap2.service?.title || ''}`
             const text = `Your booking for ${ap2.service?.title || ''} on ${new Date(ap2.start).toLocaleString()} is confirmed.`
             if (process.env.SENDGRID_API_KEY && emailTo) {
-              await sendgrid.send({ to: emailTo, from: process.env.SENDGRID_FROM || 'no-reply@meechlocs.test', subject, text })
+              await sendgrid.send({ to: emailTo, from: process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_FROM || 'no-reply@meechlocs.test', subject, text })
             } else {
               console.log('Confirmation email (simulated):', { to: emailTo, subject, text })
             }

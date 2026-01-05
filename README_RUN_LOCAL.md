@@ -57,7 +57,6 @@ Edit `apps/api/.env` and set:
     STRIPE_SECRET_KEY=sk_test_xxx
     STRIPE_WEBHOOK_SECRET=whsec_xxx
     APP_URL=http://localhost:5173
-    API_URL=http://localhost:4000
 
 Restart the backend (if it was running) after updating `.env`.
 

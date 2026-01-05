@@ -17,17 +17,27 @@ router.get('/slots', async (req, res) => {
   try {
     const { serviceId, date } = req.query
     if (!serviceId || !date) return res.status(400).json({ error: 'serviceId and date required' })
+    const dateStr = String(date)
     const svc = await prisma.service.findUnique({ where: { id: Number(serviceId) } })
     if (!svc) return res.status(400).json({ error: 'service not found' })
 
-    const dayStart = new Date(`${String(date)}T00:00:00.000Z`)
+    const now = new Date()
+    const todayUtc = now.toISOString().slice(0, 10)
+    if (dateStr < todayUtc) return res.json({ slots: [] })
+
+    const dayStart = new Date(`${dateStr}T00:00:00.000Z`)
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
 
     // find availability that intersects the day
     const avails = await prisma.availability.findMany({ where: { OR: [{ start: { lt: dayEnd }, end: { gt: dayStart } }] } })
 
-    // find appointments for that day
-    const appointments = await prisma.appointment.findMany({ where: { OR: [{ start: { gte: dayStart, lt: dayEnd } }, { end: { gt: dayStart, lte: dayEnd } }] } })
+    // find appointments for that day (canceled appointments should not block slots)
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        status: { notIn: ['CANCELED', 'REFUNDED'] },
+        OR: [{ start: { gte: dayStart, lt: dayEnd } }, { end: { gt: dayStart, lte: dayEnd } }],
+      },
+    })
 
     const slots: string[] = []
     const slotMs = svc.durationMins * 60 * 1000
@@ -39,6 +49,7 @@ router.get('/slots', async (req, res) => {
       for (let t = start.getTime(); t + slotMs <= end.getTime(); t += slotMs) {
         const slotStart = new Date(t)
         const slotEnd = new Date(t + slotMs)
+        if (dateStr === todayUtc && slotStart.getTime() <= now.getTime()) continue
         // check overlap with appointments
         const conflict = appointments.some(ap => !(ap.end <= slotStart || ap.start >= slotEnd) )
         if (!conflict) slots.push(slotStart.toISOString())

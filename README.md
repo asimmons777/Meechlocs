@@ -43,7 +43,7 @@ Then create a test Checkout session via the frontend and confirm webhook events 
 
 SendGrid
 
-- To send real confirmation emails, set `SENDGRID_API_KEY` and `SENDGRID_FROM` in `apps/api/.env`.
+- To send real verification/confirmation emails, set `SENDGRID_API_KEY` and a sender (`SENDGRID_FROM` or `SENDGRID_FROM_EMAIL`) in `apps/api/.env`.
 
 Image uploads
 
