@@ -1,6 +1,5 @@
 import express from 'express'
 import { prisma } from '../lib/prisma'
-import type { Appointment } from '@prisma/client'
 
 const router = express.Router()
 
@@ -52,7 +51,7 @@ router.get('/slots', async (req, res) => {
         const slotEnd = new Date(t + slotMs)
         if (dateStr === todayUtc && slotStart.getTime() <= now.getTime()) continue
         // check overlap with appointments
-        const conflict = appointments.some((ap: Appointment) => !(ap.end <= slotStart || ap.start >= slotEnd))
+        const conflict = appointments.some((ap: { start: Date; end: Date }) => !(ap.end <= slotStart || ap.start >= slotEnd))
         if (!conflict) slots.push(slotStart.toISOString())
       }
     }
