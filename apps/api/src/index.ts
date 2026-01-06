@@ -9,6 +9,8 @@ import webhook from './routes/webhook'
 import adminRoutes from './routes/admin'
 import availabilityRoutes from './routes/availability'
 import paymentsRoutes from './routes/payments'
+import path from 'path'
+import fs from 'fs'
 
 const app = express()
 
@@ -20,6 +22,13 @@ if (corsOriginEnv && corsOriginEnv !== '*') {
   app.use(cors())
 }
 app.use(express.json())
+
+// Static uploads (used for service/gallery images)
+const uploadDir = (process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim())
+  ? process.env.UPLOAD_DIR.trim()
+  : path.join(process.cwd(), 'uploads')
+try { fs.mkdirSync(uploadDir, { recursive: true }) } catch { /* ignore */ }
+app.use('/uploads', express.static(uploadDir))
 
 // API routes
 app.use('/api/auth', authRoutes)

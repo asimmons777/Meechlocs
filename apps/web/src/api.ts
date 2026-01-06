@@ -25,12 +25,14 @@ export async function apiFetch(path: string, opts: RequestOptions = {}) {
 export function resolveImageUrl(raw: string): string {
   const url = String(raw || '').trim()
   if(!url) return url
+  if(url.startsWith('/uploads/')) return `${API_URL}${url}`
   if(url.startsWith('/')) return url
   if(url.startsWith('http://') || url.startsWith('https://')) {
     // If an image was stored with a hard-coded localhost base, rewrite to the current origin.
     try{
       const u = new URL(url)
       if(u.hostname === 'localhost' || u.hostname === '127.0.0.1'){
+        if(u.pathname.startsWith('/uploads/')) return `${API_URL}${u.pathname}`
         return `${window.location.origin}${u.pathname}`
       }
     }catch{

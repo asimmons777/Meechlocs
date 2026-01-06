@@ -10,17 +10,22 @@ const router = express.Router()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' } as any)
 const hasStripeKey = (k?: string) => !!k && k.length > 20 && !k.includes('...')
 
-// setup multer to save uploads to the Vite frontend public/uploads directory for demo
-// NOTE: Web app runs from /apps/web (not /apps/apps/web)
-const uploadDir = path.join(__dirname, '../../../web/public/uploads')
-const legacyUploadDir = path.join(__dirname, '../../../apps/web/public/uploads')
-fs.mkdirSync(uploadDir, { recursive: true })
+// Store uploads in the API's filesystem and serve them from /uploads
+const uploadDir = (process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim())
+  ? process.env.UPLOAD_DIR.trim()
+  : path.join(process.cwd(), 'uploads')
 
-// Best-effort one-time migration from legacy path (if it exists)
+// Best-effort one-time migration from legacy paths (if they exist)
+const legacyUploadDirs = [
+  path.join(__dirname, '../../../web/public/uploads'),
+  path.join(__dirname, '../../../apps/web/public/uploads'),
+]
+try { fs.mkdirSync(uploadDir, { recursive: true }) } catch { /* ignore */ }
 try{
-  if(fs.existsSync(legacyUploadDir)){
-    for(const name of fs.readdirSync(legacyUploadDir)){
-      const src = path.join(legacyUploadDir, name)
+  for(const legacyDir of legacyUploadDirs){
+    if(!fs.existsSync(legacyDir)) continue
+    for(const name of fs.readdirSync(legacyDir)){
+      const src = path.join(legacyDir, name)
       const dst = path.join(uploadDir, name)
       try{
         if(!fs.existsSync(dst) && fs.statSync(src).isFile()) fs.copyFileSync(src, dst)

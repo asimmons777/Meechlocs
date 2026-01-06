@@ -105,7 +105,7 @@ export default function App() {
         </div>
       </header>
       <div className="banner">
-        <img className="site-banner-img" src="/uploads/image.png" alt="MeechLocs banner" />
+        <img className="site-banner-img" src="/banner.png" alt="MeechLocs banner" />
         <div className="container">
           <p className="site-banner-note">
             Demo mode: payments are simulated. Use <strong>user@meechlocs.test</strong> / <strong>Passw0rd!</strong> to try booking.
