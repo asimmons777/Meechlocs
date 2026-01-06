@@ -1,11 +1,7 @@
 {
-  "buildCommand": "npm --prefix apps/web install && npm --prefix apps/web run build",
+  "buildCommand": "npm --prefix apps/web ci && npm --prefix apps/web run build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
