@@ -44,7 +44,7 @@ export default function Dashboard(){
       const res:any = await apiFetch(`/api/appointments/${appt.id}/cancel`, { method: 'POST' })
       await refreshAppointments()
       if(res?.refunded) {
-        alert(res?.refundSimulated ? 'Appointment canceled. Refund simulated (Stripe not connected).' : 'Appointment canceled. Deposit refunded.')
+        alert('Appointment canceled. Deposit refunded.')
       } else if(res?.depositForfeited) {
         alert('Appointment canceled. Deposit forfeited (within 24 hours).')
       } else {
@@ -146,7 +146,7 @@ export default function Dashboard(){
 
       <div style={{ marginTop: 18 }}>
         <h3 className="h3">Saved Cards</h3>
-        {methods.length===0 && <div className="card card-pad muted">No saved cards (Stripe not connected).</div>}
+        {methods.length===0 && <div className="card card-pad muted">No saved cards.</div>}
 
         <div style={{ marginTop: 10 }}>
           <button className="btn btn-sm" type="button" onClick={startSetup} disabled={pmBusy}>
