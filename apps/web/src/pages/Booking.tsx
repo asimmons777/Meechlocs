@@ -158,7 +158,7 @@ export default function Booking(){
 
       <div className="card card-pad" style={{ maxWidth: 520, margin: '0 auto' }}>
         <h2 className="h2">Book: {service.title}</h2>
-        <p className="p">Select a date and an available time. You’ll pay the deposit (simulated in demo mode).</p>
+        <p className="p">Select a date and an available time. Deposit payment will be enabled once Stripe is connected.</p>
 
       {error && <div className="alert alert-danger">{error}</div>}
 

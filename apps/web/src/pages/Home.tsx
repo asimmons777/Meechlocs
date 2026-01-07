@@ -41,7 +41,7 @@ export default function Home(){
     <div>
       <div className="card card-pad">
         <h1 className="h1">Welcome to MeechLocs</h1>
-        <p className="p">Book services with real-time availability and a deposit payment flow (simulated in this demo).</p>
+        <p className="p">Book services with real-time availability and a deposit payment flow (Stripe will be connected for live payments).</p>
         <div className="row">
           <a href="#services" className="btn">Browse Services</a>
           <button type="button" className="btn btn-secondary" onClick={goToSearch}>Search Services</button>

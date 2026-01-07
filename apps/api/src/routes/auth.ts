@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { getTokenFromHeader, JWT_SECRET, signToken } from '../utils/auth';
 import sgMail from '@sendgrid/mail';
+import { isDemoEmail, shouldHideDemoContent } from '../utils/demo';
 
 const router = express.Router();
 
@@ -48,6 +49,7 @@ router.post('/register/start', async (req, res) => {
   try {
     const { email, password, name, phone } = req.body;
     if (!isEmail(email)) return res.status(400).send('Valid email is required');
+    if (shouldHideDemoContent() && isDemoEmail(email)) return res.status(403).send('Account is disabled');
     if (!password || typeof password !== 'string') return res.status(400).send('password required');
     if (password.length < 6) return res.status(400).send('Password must be at least 6 characters');
 
@@ -91,6 +93,7 @@ router.post('/register/verify', async (req, res) => {
   try {
     const { email, code } = req.body;
     if (!isEmail(email)) return res.status(400).send('Valid email is required');
+    if (shouldHideDemoContent() && isDemoEmail(email)) return res.status(403).send('Account is disabled');
     if (!code || typeof code !== 'string') return res.status(400).send('code required');
 
     const record = await prisma.registrationCode.findUnique({ where: { email } });
@@ -139,8 +142,14 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+    if (typeof email === 'string' && shouldHideDemoContent() && isDemoEmail(email)) {
+      return res.status(403).json({ error: 'Account is disabled' });
+    }
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (shouldHideDemoContent() && isDemoEmail(user.email)) {
+      return res.status(403).json({ error: 'Account is disabled' });
+    }
     const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
     if (requireVerification && !user.isGuest && !user.verifiedAt) {
       return res.status(403).json({ error: 'Email not verified' });
@@ -159,6 +168,7 @@ router.post('/guest/start', async (req, res) => {
   try {
     const { email, name, phone } = req.body;
     if (!isEmail(email)) return res.status(400).send('Valid email is required');
+    if (shouldHideDemoContent() && isDemoEmail(email)) return res.status(403).send('Account is disabled');
 
     const normalizedPhone = normalizePhone(phone);
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -200,6 +210,7 @@ router.post('/guest/verify', async (req, res) => {
   try {
     const { email, code } = req.body;
     if (!isEmail(email)) return res.status(400).send('Valid email is required');
+    if (shouldHideDemoContent() && isDemoEmail(email)) return res.status(403).send('Account is disabled');
     if (!code || typeof code !== 'string') return res.status(400).send('code required');
 
     const record = await prisma.registrationCode.findUnique({ where: { email } });

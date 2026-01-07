@@ -326,9 +326,6 @@ export default function AuthGateModal({ initialMode = 'login', onAuthed, onReque
         )}
 
         <div className="divider" />
-        <div className="small muted">
-          Tip: demo login is <strong>user@meechlocs.test</strong> / <strong>Passw0rd!</strong>
-        </div>
       </div>
     </div>
   )

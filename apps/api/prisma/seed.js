@@ -1,0 +1,48 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
+const client_1 = require("@prisma/client");
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const prisma = new client_1.PrismaClient();
+async function main() {
+    const adminEmail = ((process.env.ADMIN_EMAIL || '') + '').trim();
+    const adminPassword = String(process.env.ADMIN_PASSWORD || '');
+    const adminName = ((process.env.ADMIN_NAME || '') + '').trim() || 'Admin';
+    if (!adminEmail || !adminPassword) {
+        console.log('Seed: no changes. Set ADMIN_EMAIL and ADMIN_PASSWORD to create the initial admin user.');
+        console.log('Tip: run with NODE_ENV=production and a 12+ char password for a real deployment.');
+        return;
+    }
+    const env = String(process.env.NODE_ENV || '').toLowerCase();
+    if (env === 'production' && adminPassword.length < 12) {
+        throw new Error('ADMIN_PASSWORD must be at least 12 characters when NODE_ENV=production');
+    }
+    const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+    if (existing) {
+        console.log('Admin user already exists:', existing.email);
+        return;
+    }
+    const passwordHash = await bcrypt_1.default.hash(adminPassword, 10);
+    const admin = await prisma.user.create({
+        data: {
+            email: adminEmail,
+            passwordHash,
+            name: adminName,
+            role: 'ADMIN',
+            verifiedAt: new Date(),
+        },
+    });
+    console.log('Admin created:', admin.email);
+    console.log('Seed complete');
+}
+main()
+    .catch((e) => {
+    console.error(e);
+    process.exit(1);
+})
+    .finally(async () => {
+    await prisma.$disconnect();
+});
