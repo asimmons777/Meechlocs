@@ -35,68 +35,72 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="card" style={{ maxWidth: 520, margin: '0 auto' }}>
-      <div className="h2">Reset password</div>
-      <div className="small muted" style={{ marginTop: 6 }}>
-        Choose a new password for your account.
-      </div>
-
-      {!token && (
-        <div className="alert alert-danger" style={{ marginTop: 12 }}>
-          Missing reset token. Please request a new reset link.
-        </div>
-      )}
-
-      {error && <div className="alert alert-danger" style={{ marginTop: 12 }}>{error}</div>}
-
-      {done ? (
-        <div className="alert" style={{ marginTop: 12 }}>
-          Password updated. You can now log in with your new password.
-          <div style={{ marginTop: 10 }}>
-            <Link className="btn btn-secondary" to="/">Back to login</Link>
+    <div className="card card-pad" style={{ maxWidth: 640, margin: '0 auto' }}>
+      <div style={{ display: 'grid', gap: 12 }}>
+        <div>
+          <div className="h2">Reset password</div>
+          <div className="small muted">
+            Choose a new password for your account.
           </div>
         </div>
-      ) : (
-        <form onSubmit={submit} style={{ marginTop: 12 }}>
-          <div className="field">
-            <div className="label">New password</div>
-            <input
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              type="password"
-              placeholder="New password"
-              className="input"
-              autoComplete="new-password"
-              disabled={!token}
-            />
-          </div>
-          <div className="field" style={{ marginTop: 12 }}>
-            <div className="label">Confirm password</div>
-            <input
-              value={password2}
-              onChange={e => setPassword2(e.target.value)}
-              type="password"
-              placeholder="Confirm password"
-              className="input"
-              autoComplete="new-password"
-              disabled={!token}
-            />
-          </div>
 
-          {!passwordsMatch && (password || password2) && (
-            <div className="small" style={{ marginTop: 10, color: 'var(--danger)' }}>
-              Passwords must match.
+        {!token && (
+          <div className="alert alert-danger">
+            Missing reset token. Please request a new reset link.
+          </div>
+        )}
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        {done ? (
+          <div className="alert">
+            Password updated. You can now log in with your new password.
+            <div style={{ marginTop: 12 }}>
+              <Link className="btn btn-secondary" to="/">Back to login</Link>
             </div>
-          )}
-
-          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-            <button className="btn" type="submit" disabled={busy || !token || !passwordsMatch}>
-              Reset password
-            </button>
-            <Link className="btn btn-secondary" to="/forgot-password">Request a new link</Link>
           </div>
-        </form>
-      )}
+        ) : (
+          <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
+            <div className="field">
+              <div className="label">New password</div>
+              <input
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                type="password"
+                placeholder="New password"
+                className="input"
+                autoComplete="new-password"
+                disabled={!token}
+              />
+            </div>
+            <div className="field">
+              <div className="label">Confirm password</div>
+              <input
+                value={password2}
+                onChange={e => setPassword2(e.target.value)}
+                type="password"
+                placeholder="Confirm password"
+                className="input"
+                autoComplete="new-password"
+                disabled={!token}
+              />
+            </div>
+
+            {!passwordsMatch && (password || password2) && (
+              <div className="small" style={{ color: 'var(--danger-fg)' }}>
+                Passwords must match.
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gap: 12, marginTop: 2 }}>
+              <button className="btn" type="submit" disabled={busy || !token || !passwordsMatch}>
+                Reset password
+              </button>
+              <Link className="btn btn-secondary" to="/forgot-password">Request a new link</Link>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
