@@ -24,10 +24,7 @@ Recommended: **Railway (API + MySQL)** + **Vercel (Web)**.
 
 - Add → Service → GitHub repo.
 - Set **Root Directory**: `apps/api`
-- Set **Build Command**:
-  - `npm ci && npm run prisma:generate && npm run build`
-- Set **Start Command**:
-  - `npm start`
+- Build/Start: leave defaults (recommended) — `apps/api/nixpacks.toml` makes install/build/start explicit.
 
 Note: `apps/api/nixpacks.toml` is included to make these steps explicit.
 
@@ -35,7 +32,7 @@ Note: `apps/api/nixpacks.toml` is included to make these steps explicit.
 
 Set these on the **API service**:
 
-- `PORT=4000` (Railway may set this automatically; if it does, you can omit)
+- Do NOT set `PORT` manually (Railway sets it)
 - `NODE_ENV=staging` (recommended for staging until SendGrid is confirmed)
 - `JWT_SECRET=<strong random>`
 - `DATABASE_URL=<mysql connection string in Prisma format>`
@@ -87,6 +84,24 @@ In the deployed web:
 - Create availability (admin)
 - Book an appointment
 - Cancel > 24h before start and confirm it becomes `REFUNDED` (refund simulation is OK until Stripe is enabled)
+
+## If services are empty
+
+If the site loads but no services appear, the database likely hasn’t been seeded yet.
+
+Run these locally (do NOT paste your DB URL in chat):
+
+```bash
+cd /workspaces/Meechlocs/apps/api
+
+export DATABASE_URL='PASTE_RAILWAY_MYSQL_URL_HERE'
+
+npm run prisma:generate
+npx prisma db push --schema=./prisma/schema.prisma
+npm run seed
+
+unset DATABASE_URL
+```
 
 ## Stripe later
 
