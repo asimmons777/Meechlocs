@@ -1,6 +1,7 @@
 import express from 'express';
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { getTokenFromHeader, JWT_SECRET, signToken } from '../utils/auth';
 import sgMail from '@sendgrid/mail';
@@ -42,6 +43,41 @@ async function sendVerificationEmail(toEmail: string, code: string) {
 
   // Dev fallback: log code (no email provider configured).
   console.log(`[auth] Verification code for ${toEmail}: ${code}`);
+  return { delivered: false };
+}
+
+function baseUrl(): string {
+  const appUrl = (process.env.APP_URL || '').trim();
+  if (appUrl) return appUrl.replace(/\/$/, '');
+  // Local fallback (Vite default)
+  return 'http://localhost:5173';
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function generateResetToken(): string {
+  // 64 hex chars
+  return crypto.randomBytes(32).toString('hex');
+}
+
+async function sendPasswordResetEmail(toEmail: string, resetUrl: string) {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_FROM;
+
+  if (apiKey && fromEmail) {
+    sgMail.setApiKey(apiKey);
+    await sgMail.send({
+      to: toEmail,
+      from: fromEmail,
+      subject: 'Reset your MeechLocs password',
+      text: `Use this link to reset your password (expires in 60 minutes): ${resetUrl}`,
+    });
+    return { delivered: true };
+  }
+
+  console.log(`[auth] Password reset link for ${toEmail}: ${resetUrl}`);
   return { delivered: false };
 }
 
@@ -161,6 +197,93 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
+  }
+});
+
+// Request a password reset link.
+// Always returns ok: true to avoid revealing whether an email exists.
+router.post('/password/forgot', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!isEmail(email)) return res.status(400).send('Valid email is required');
+    if (shouldHideDemoContent() && isDemoEmail(email)) {
+      return res.json({ ok: true });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ ok: true });
+    }
+
+    const token = generateResetToken();
+    const tokenHash = hashToken(token);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Remove any existing unused tokens for this user to keep things simple.
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: user.id, usedAt: null },
+    });
+
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    const resetUrl = `${baseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+    const delivery = await sendPasswordResetEmail(email, resetUrl);
+
+    const isProd = process.env.NODE_ENV === 'production';
+    if (!delivery.delivered && !isProd) {
+      return res.json({ ok: true, devResetUrl: resetUrl });
+    }
+
+    // In production, if email isn't configured, we still return ok to avoid leaking info.
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('server error');
+  }
+});
+
+router.post('/password/reset', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || typeof token !== 'string') return res.status(400).send('token required');
+    if (!password || typeof password !== 'string') return res.status(400).send('password required');
+    if (password.length < 6) return res.status(400).send('Password must be at least 6 characters');
+
+    const tokenHash = hashToken(token);
+    const record = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!record) return res.status(400).send('Invalid or expired token');
+    if (record.usedAt) return res.status(400).send('Invalid or expired token');
+    if (record.expiresAt.getTime() < Date.now()) return res.status(400).send('Invalid or expired token');
+
+    const user = await prisma.user.findUnique({ where: { id: record.userId } });
+    if (!user) return res.status(400).send('Invalid or expired token');
+    if (shouldHideDemoContent() && isDemoEmail(user.email)) return res.status(403).send('Account is disabled');
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+      prisma.passwordResetToken.deleteMany({
+        where: { userId: user.id, id: { not: record.id } },
+      }),
+    ]);
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('server error');
   }
 });
 

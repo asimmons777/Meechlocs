@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../api'
 
 type Mode = 'login' | 'register' | 'guest'
@@ -12,6 +13,7 @@ type Props = {
 }
 
 export default function AuthGateModal({ initialMode = 'login', onAuthed, onRequestClose, allowUnverifiedGuest = false, onGuestBrowse }: Props) {
+  const nav = useNavigate()
   const [mode, setMode] = useState<Mode>(initialMode)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -142,7 +144,8 @@ export default function AuthGateModal({ initialMode = 'login', onAuthed, onReque
   }
 
   function forgotPassword() {
-    alert('Password reset is not available yet. Please create an account or continue as a guest.')
+    onRequestClose?.()
+    nav('/forgot-password')
   }
 
   return (

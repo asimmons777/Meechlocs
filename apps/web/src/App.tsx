@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Routes, Route, Link, NavLink, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Register from './pages/Register'
 import Gallery from './pages/Gallery'
@@ -7,6 +7,8 @@ import Booking from './pages/Booking'
 import Dashboard from './pages/Dashboard'
 import Admin from './pages/Admin'
 import AuthGateModal from './components/AuthGateModal'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 type StoredUser = {
   id: number
@@ -30,6 +32,7 @@ function readStoredUser(): StoredUser | null {
 
 export default function App() {
   const nav = useNavigate()
+  const location = useLocation()
 
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
   const [user, setUser] = useState<StoredUser | null>(() => readStoredUser())
@@ -58,6 +61,11 @@ export default function App() {
   }, [flash])
 
   const isAdmin = useMemo(() => user?.role === 'ADMIN', [user])
+
+  const allowUnauthedRoute = useMemo(() => {
+    const path = location.pathname
+    return path === '/forgot-password' || path === '/reset-password'
+  }, [location.pathname])
 
   function logout() {
     localStorage.removeItem('token')
@@ -116,7 +124,7 @@ export default function App() {
           </div>
         )}
 
-        {!token && !guestBrowsing && (
+        {!token && !guestBrowsing && !allowUnauthedRoute && (
           <AuthGateModal
             initialMode="login"
             allowUnverifiedGuest
@@ -127,6 +135,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home/>} />
           <Route path="/register" element={<Register/>} />
+          <Route path="/forgot-password" element={<ForgotPassword/>} />
+          <Route path="/reset-password" element={<ResetPassword/>} />
           <Route path="/services" element={<Gallery/>} />
           <Route path="/booking/:id" element={<Booking/>} />
 
