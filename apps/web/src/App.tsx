@@ -106,11 +106,6 @@ export default function App() {
       </header>
       <div className="banner">
         <img className="site-banner-img" src="/banner.png" alt="MeechLocs banner" />
-        <div className="container">
-          <p className="site-banner-note">
-            Payments are currently simulated until Stripe is connected.
-          </p>
-        </div>
       </div>
       <main className="main">
         <div className="container">
@@ -220,9 +215,6 @@ export default function App() {
             </div>
           </div>
 
-          <div className="footer-note">
-            Payments are currently simulated until Stripe is connected.
-          </div>
         </div>
       </footer>
     </div>
