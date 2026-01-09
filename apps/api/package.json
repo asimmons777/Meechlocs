@@ -13,6 +13,7 @@
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "seed": "node ./prisma/seed.js",
     "seed-demo": "node ./scripts/seed-demo.js",
+    "seed-demo-user": "node ./scripts/seed-demo-user.js",
     "purge-demo": "node ./scripts/purge-demo.js"
   },
   "dependencies": {
