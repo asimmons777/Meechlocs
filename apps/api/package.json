@@ -12,6 +12,7 @@
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma --name init",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "seed": "node ./prisma/seed.js",
+    "seed-demo": "node ./scripts/seed-demo.js",
     "purge-demo": "node ./scripts/purge-demo.js"
   },
   "dependencies": {
