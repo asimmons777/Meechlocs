@@ -3,6 +3,11 @@ export const DEMO_EMAIL_DOMAIN = 'meechlocs.test'
 export const DEMO_SERVICE_TITLES = ['Wash & Style', 'Color Treatment', 'Cut & Trim']
 
 export function shouldHideDemoContent(): boolean {
+  // Explicit allow: show demo content even outside development.
+  // Useful for staging/test environments where you want seed-demo to be visible.
+  const allow = (process.env.ALLOW_DEMO_CONTENT || '').trim().toLowerCase()
+  if (allow === 'true') return false
+
   // Default: hide demo content everywhere except local development.
   // Allow override: set HIDE_DEMO_CONTENT=false
   const override = (process.env.HIDE_DEMO_CONTENT || '').trim().toLowerCase()
