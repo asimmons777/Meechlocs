@@ -7,6 +7,7 @@ export default function Booking(){
   const { id } = useParams()
   const nav = useNavigate()
   const [service, setService] = useState<any>(null)
+  const [serviceLoaded, setServiceLoaded] = useState(false)
   const [date, setDate] = useState('')
   const [calMonth, setCalMonth] = useState(() => {
     const now = new Date()
@@ -36,7 +37,18 @@ export default function Booking(){
 
   useEffect(()=>{
     if(!id) return
-    apiFetch(`/api/services/${id}`).then(setService).catch(console.error)
+    setServiceLoaded(false)
+    apiFetch(`/api/services/${id}`)
+      .then((s) => {
+        setService(s)
+        setServiceLoaded(true)
+      })
+      .catch((err) => {
+        console.error(err)
+        setError(err?.message || 'Could not load service')
+        setService(null)
+        setServiceLoaded(true)
+      })
   },[id])
 
   useEffect(()=>{
@@ -136,7 +148,16 @@ export default function Booking(){
     setPmBusy(false)
   }
 
-  if(!service) return <div>Loading...</div>
+  if(!serviceLoaded) return <div>Loading...</div>
+  if(!service) {
+    return (
+      <div className="card card-pad" style={{ maxWidth: 520, margin: '0 auto' }}>
+        <h2 className="h2">Could not load service</h2>
+        <p className="p">Please go back and select a service again.</p>
+        <button type="button" className="btn" onClick={() => nav('/services')}>Back to Gallery</button>
+      </div>
+    )
+  }
 
   return (
     <>
