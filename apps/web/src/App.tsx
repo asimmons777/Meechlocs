@@ -4,6 +4,8 @@ import Home from './pages/Home'
 import Register from './pages/Register'
 import Gallery from './pages/Gallery'
 import Booking from './pages/Booking'
+import BookingSuccess from './pages/BookingSuccess'
+import BookingCancel from './pages/BookingCancel'
 import Dashboard from './pages/Dashboard'
 import Admin from './pages/Admin'
 import AuthGateModal from './components/AuthGateModal'
@@ -138,6 +140,8 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword/>} />
           <Route path="/reset-password" element={<ResetPassword/>} />
           <Route path="/services" element={<Gallery/>} />
+          <Route path="/booking/success" element={<BookingSuccess/>} />
+          <Route path="/booking/cancel" element={<BookingCancel/>} />
           <Route path="/booking/:id" element={<Booking/>} />
 
           <Route
