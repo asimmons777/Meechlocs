@@ -47,7 +47,12 @@ app.use('/api/availability', availabilityRoutes)
 app.use('/api/payments', paymentsRoutes)
 
 // health
-app.get('/api/health', (req, res) => res.json({ ok: true }))
+app.get('/api/health', (req, res) => {
+  const key = (process.env.STRIPE_SECRET_KEY || '').trim()
+  const stripeConfigured = !!key && key.length > 20 && !key.includes('...')
+  const appUrlPresent = !!(process.env.APP_URL || '').trim()
+  res.json({ ok: true, stripeConfigured, appUrlPresent, nodeEnv: (process.env.NODE_ENV || '').trim() || 'unknown' })
+})
 
 const port = Number(process.env.PORT || 4000)
 app.listen(port, () => {
