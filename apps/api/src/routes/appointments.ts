@@ -41,6 +41,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
     const service = await prisma.service.findUnique({ where: { id: Number(serviceId) } })
     if (!service) return res.status(400).json({ error: 'Service not found' })
 
+    // If deposits are enabled for this service, Stripe must be configured.
+    // Otherwise the UI will look like it "confirmed" without collecting payment.
+    if ((service.depositCents || 0) > 0 && !hasStripeKey(process.env.STRIPE_SECRET_KEY)) {
+      return res.status(400).json({ error: 'Stripe not configured' })
+    }
+
     if (hasStripeKey(process.env.STRIPE_SECRET_KEY)) {
       const appUrl = process.env.APP_URL || 'http://localhost:5173'
       const customerId = await getOrCreateCustomerId(userId, req.user?.email)

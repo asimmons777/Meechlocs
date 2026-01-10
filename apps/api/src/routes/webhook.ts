@@ -15,27 +15,28 @@ router.post('/', async (req, res) => {
   let event: Stripe.Event
 
   try {
-    // If express.raw() middleware already populated req.body, prefer that.
-    if (req.body && Object.keys(req.body as any).length > 0) {
-      // req.body might be a parsed object or a Buffer
+    const mustVerify = Boolean(webhookSecret && sig)
+
+    // Prefer body from express.raw() when present.
+    // In production we REQUIRE raw bytes for signature verification.
+    if (req.body && (Buffer.isBuffer(req.body) || Object.keys(req.body as any).length > 0)) {
       if (Buffer.isBuffer(req.body)) {
         const buf = req.body as Buffer
-        if (webhookSecret && sig) {
-          event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
-        } else {
-          event = JSON.parse(buf.toString('utf8')) as Stripe.Event
-        }
+        event = mustVerify
+          ? stripe.webhooks.constructEvent(buf, sig as string, webhookSecret as string)
+          : (JSON.parse(buf.toString('utf8')) as Stripe.Event)
       } else {
+        if (mustVerify) {
+          throw new Error('Webhook signature verification requires raw request body. Ensure express.raw() is applied before any JSON body parser.')
+        }
         event = req.body as unknown as Stripe.Event
       }
     } else {
-      // No body provided by middleware; read raw stream
+      // No body provided by middleware; read raw stream.
       const buf = await rawBody(req)
-      if (webhookSecret && sig) {
-        event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
-      } else {
-        event = JSON.parse(buf.toString('utf8')) as Stripe.Event
-      }
+      event = mustVerify
+        ? stripe.webhooks.constructEvent(buf, sig as string, webhookSecret as string)
+        : (JSON.parse(buf.toString('utf8')) as Stripe.Event)
     }
   } catch (err: any) {
     console.error('Webhook error', err.message)

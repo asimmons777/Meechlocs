@@ -13,7 +13,7 @@ docker compose up -d
 ```bash
 cd apps/api
 npm install
-cp .env .env.local  # fill DATABASE_URL, JWT_SECRET, STRIPE keys if available
+cp .env.example .env  # fill DATABASE_URL, JWT_SECRET, (optional) Stripe/SendGrid
 npm run dev
 ```
 
@@ -28,6 +28,13 @@ npm run dev
 Admin seed credentials (from the seeded data):
 - admin: `admin@meechlocs.test` / `Passw0rd!`
 - user: `user@meechlocs.test` / `Passw0rd!`
+
+If the user account isn't present, you can create it with:
+
+```bash
+cd apps/api
+npm run seed-demo-user
+```
 
 Stripe webhook (local testing)
 
@@ -47,9 +54,32 @@ SendGrid
 
 Image uploads
 
-- Admin UI supports simple uploads which are saved to `apps/web/public/uploads` for demo.
+- Admin UI supports uploads which are stored by the API and served from `/uploads`.
 
 Notes
 
 - The demo uses JWTs in localStorage for auth; for production migrate to httpOnly cookies.
 - For card-on-file and refunds, run a full Stripe E2E with the Stripe CLI so real PaymentIntents and payment methods are attached.
+
+Production deploy checklist (Vercel + Railway)
+
+1) Web URL + CORS
+- Pick a stable web URL (custom domain recommended).
+- Set API env: `APP_URL` to the web URL and `CORS_ORIGIN` to the exact origin (or comma-separated origins).
+- Avoid `CORS_ORIGIN='*'` in production.
+
+2) Database schema
+- Run Prisma schema apply against the production DB (e.g. `npx prisma db push`).
+
+3) Email (required for production)
+- Configure SendGrid (`SENDGRID_API_KEY` + sender `SENDGRID_FROM_EMAIL`/`SENDGRID_FROM`).
+- Keep `REQUIRE_EMAIL_VERIFICATION=true`.
+
+4) Stripe
+- Set API env: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`.
+- Stripe webhook endpoint URL must point to `/api/webhook` on the API deployment.
+
+5) Demo/test flags
+- Remove or set `ALLOW_DEMO_CONTENT=false` before launch.
+
+See also: README_STAGING.md and README_RUN_LOCAL.md.

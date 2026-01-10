@@ -86,7 +86,11 @@ export default function Booking(){
     if(res.checkoutUrl){
       window.location.href = res.checkoutUrl
     } else {
-      alert('Appointment confirmed')
+      const requiresDeposit = typeof service.depositCents === 'number' && service.depositCents > 0
+      if (requiresDeposit) {
+        throw new Error('Payments are not configured. Please try again later.')
+      }
+      alert('Appointment requested')
       nav('/dashboard')
     }
   }

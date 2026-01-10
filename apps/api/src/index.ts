@@ -19,8 +19,16 @@ if (corsOriginEnv && corsOriginEnv !== '*') {
   const origins = corsOriginEnv.split(',').map(o => o.trim()).filter(Boolean)
   app.use(cors({ origin: origins, credentials: true }))
 } else {
+  if ((process.env.NODE_ENV || '').trim() === 'production' && corsOriginEnv === '*') {
+    console.warn("[api] WARN: CORS_ORIGIN='*' in production. Set CORS_ORIGIN to your Vercel/custom domain for a production-safe deploy.")
+  }
   app.use(cors())
 }
+
+// stripe webhook - must receive raw body for signature verification
+app.use('/api/webhook', express.raw({ type: 'application/json' }), webhook)
+
+// JSON body parser for all other routes
 app.use(express.json())
 
 // Static uploads (used for service/gallery images)
@@ -37,9 +45,6 @@ app.use('/api/appointments', appointmentsRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/availability', availabilityRoutes)
 app.use('/api/payments', paymentsRoutes)
-
-// stripe webhook - note: when using constructEvent, you must use raw body
-app.use('/api/webhook', express.raw({ type: 'application/json' }), webhook)
 
 // health
 app.get('/api/health', (req, res) => res.json({ ok: true }))

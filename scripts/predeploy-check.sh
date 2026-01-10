@@ -82,6 +82,45 @@ echo "== build web"
 cd "$ROOT/apps/web"
 npm run build
 
+echo "== env sanity (best-effort)"
+
+if [ -f "$ROOT/apps/api/.env.example" ]; then
+	:
+else
+	echo "WARN: apps/api/.env.example is missing (harder to configure deploy envs)"
+fi
+
+if [ -f "$ROOT/apps/web/.env.example" ]; then
+	:
+else
+	echo "WARN: apps/web/.env.example is missing (harder to configure Vercel envs)"
+fi
+
+NODE_ENV_VALUE="${NODE_ENV:-}"
+CORS_ORIGIN_VALUE="${CORS_ORIGIN:-}"
+
+if [ "$NODE_ENV_VALUE" = "production" ] && [ "$CORS_ORIGIN_VALUE" = "*" ]; then
+	echo "WARN: NODE_ENV=production with CORS_ORIGIN='*' is not production-safe. Use a specific origin (or comma-separated origins)."
+fi
+
+if [ "${ALLOW_DEMO_CONTENT:-}" = "true" ]; then
+	echo "WARN: ALLOW_DEMO_CONTENT=true (demo services/accounts may be visible)."
+fi
+
+if [ -n "${STRIPE_SECRET_KEY:-}" ] && [ -z "${STRIPE_WEBHOOK_SECRET:-}" ]; then
+	echo "WARN: STRIPE_SECRET_KEY is set but STRIPE_WEBHOOK_SECRET is missing (webhook confirmations/refunds may not work)."
+fi
+
+if [ -n "${STRIPE_SECRET_KEY:-}" ] && [ -z "${APP_URL:-}" ]; then
+	echo "WARN: STRIPE_SECRET_KEY is set but APP_URL is missing (Checkout success/cancel redirects may be wrong)."
+fi
+
+if [ "$NODE_ENV_VALUE" = "production" ]; then
+	if [ -z "${SENDGRID_API_KEY:-}" ] || [ -z "${SENDGRID_FROM_EMAIL:-}${SENDGRID_FROM:-}" ]; then
+		echo "WARN: NODE_ENV=production but SendGrid vars are missing (email verification + password reset will fail)."
+	fi
+fi
+
 cleanup() {
 	local api_pid=""
 	local web_pid=""
