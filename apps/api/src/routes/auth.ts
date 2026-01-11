@@ -31,14 +31,19 @@ async function sendVerificationEmail(toEmail: string, code: string) {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_FROM;
 
   if (apiKey && fromEmail) {
-    sgMail.setApiKey(apiKey);
-    await sgMail.send({
-      to: toEmail,
-      from: fromEmail,
-      subject: 'Your MeechLocs verification code',
-      text: `Your MeechLocs verification code is: ${code}. This code expires in 10 minutes.`,
-    });
-    return { delivered: true };
+    try {
+      sgMail.setApiKey(apiKey);
+      await sgMail.send({
+        to: toEmail,
+        from: fromEmail,
+        subject: 'Your MeechLocs verification code',
+        text: `Your MeechLocs verification code is: ${code}. This code expires in 10 minutes.`,
+      });
+      return { delivered: true };
+    } catch (err) {
+      console.error('[auth] SendGrid verification email failed:', err);
+      return { delivered: false };
+    }
   }
 
   // Dev fallback: log code (no email provider configured).
@@ -67,14 +72,19 @@ async function sendPasswordResetEmail(toEmail: string, resetUrl: string) {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_FROM;
 
   if (apiKey && fromEmail) {
-    sgMail.setApiKey(apiKey);
-    await sgMail.send({
-      to: toEmail,
-      from: fromEmail,
-      subject: 'Reset your MeechLocs password',
-      text: `Use this link to reset your password (expires in 60 minutes): ${resetUrl}`,
-    });
-    return { delivered: true };
+    try {
+      sgMail.setApiKey(apiKey);
+      await sgMail.send({
+        to: toEmail,
+        from: fromEmail,
+        subject: 'Reset your MeechLocs password',
+        text: `Use this link to reset your password (expires in 60 minutes): ${resetUrl}`,
+      });
+      return { delivered: true };
+    } catch (err) {
+      console.error('[auth] SendGrid password reset email failed:', err);
+      return { delivered: false };
+    }
   }
 
   console.log(`[auth] Password reset link for ${toEmail}: ${resetUrl}`);
