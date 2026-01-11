@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { apiFetch } from '../api'
+import { apiFetch, resolveImageUrl } from '../api'
 
 export default function Admin(){
   const [services, setServices] = useState<any[]>([])
@@ -267,7 +267,7 @@ export default function Admin(){
 
           <div className="row" style={{ marginTop: 12, justifyContent: 'flex-start' }}>
             {images.split(',').map(s=>s.trim()).filter(Boolean).slice(0,6).map(url=> (
-              <img key={url} src={url} style={{width:120,height:80,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}} alt="preview" />
+              <img key={url} src={resolveImageUrl(url)} style={{width:120,height:80,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}} alt="preview" />
             ))}
           </div>
 
@@ -346,7 +346,7 @@ export default function Admin(){
 
                   <div className="row" style={{ marginTop: 12, justifyContent: 'flex-start' }}>
                     {editImages.split(',').map((u:string)=>u.trim()).filter(Boolean).slice(0,6).map((url:string)=> (
-                      <img key={url} src={url} style={{width:120,height:80,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}} alt="preview" />
+                        <img key={url} src={resolveImageUrl(url)} style={{width:120,height:80,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}} alt="preview" />
                     ))}
                   </div>
                 </form>

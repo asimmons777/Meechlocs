@@ -25,6 +25,13 @@ export default function Gallery(){
   const selected = selectedServiceId === '' ? null : services.find(s => s.id === selectedServiceId) || null
   const images = selected?.images || []
 
+  function onImageError(e: React.SyntheticEvent<HTMLImageElement>) {
+    const img = e.currentTarget
+    const fallback = '/banner.png'
+    if (img.src.endsWith(fallback)) return
+    img.src = fallback
+  }
+
   return (
     <div>
       <h2 className="h2">Gallery</h2>
@@ -59,7 +66,13 @@ export default function Gallery(){
         <div className="gallery-grid">
           {images.map((src, idx) => (
             <div key={idx} className="card gallery-tile">
-              <img src={resolveImageUrl(src)} alt={selected.title} className="gallery-img" loading="lazy" />
+              <img
+                src={resolveImageUrl(src)}
+                alt={selected.title}
+                className="gallery-img"
+                loading="lazy"
+                onError={onImageError}
+              />
             </div>
           ))}
         </div>
