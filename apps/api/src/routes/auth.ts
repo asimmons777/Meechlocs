@@ -67,6 +67,14 @@ function generateResetToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function isMissingPrismaTableError(err: any, tableName: string): boolean {
+  // Prisma P2021: "The table `X` does not exist in the current database."
+  if (!err || typeof err !== 'object') return false;
+  if ((err as any).code !== 'P2021') return false;
+  const meta = (err as any).meta || {};
+  return meta.table === tableName || meta.modelName === tableName;
+}
+
 async function sendPasswordResetEmail(toEmail: string, resetUrl: string) {
   const apiKey = process.env.SENDGRID_API_KEY;
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SENDGRID_FROM;
@@ -229,18 +237,27 @@ router.post('/password/forgot', async (req, res) => {
     const tokenHash = hashToken(token);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Remove any existing unused tokens for this user to keep things simple.
-    await prisma.passwordResetToken.deleteMany({
-      where: { userId: user.id, usedAt: null },
-    });
+    try {
+      // Remove any existing unused tokens for this user to keep things simple.
+      await prisma.passwordResetToken.deleteMany({
+        where: { userId: user.id, usedAt: null },
+      });
 
-    await prisma.passwordResetToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-      },
-    });
+      await prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt,
+        },
+      });
+    } catch (err) {
+      if (isMissingPrismaTableError(err, 'PasswordResetToken')) {
+        console.error('[auth] PasswordResetToken table is missing. Run `prisma db push` on the deployed database.');
+        // Do not leak details to clients; behave like success.
+        return res.json({ ok: true });
+      }
+      throw err;
+    }
 
     const resetUrl = `${baseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
     const delivery = await sendPasswordResetEmail(email, resetUrl);
@@ -266,7 +283,17 @@ router.post('/password/reset', async (req, res) => {
     if (password.length < 6) return res.status(400).send('Password must be at least 6 characters');
 
     const tokenHash = hashToken(token);
-    const record = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+
+    let record: any;
+    try {
+      record = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    } catch (err) {
+      if (isMissingPrismaTableError(err, 'PasswordResetToken')) {
+        console.error('[auth] PasswordResetToken table is missing. Run `prisma db push` on the deployed database.');
+        return res.status(503).json({ error: 'Password reset is temporarily unavailable' });
+      }
+      throw err;
+    }
     if (!record) return res.status(400).send('Invalid or expired token');
     if (record.usedAt) return res.status(400).send('Invalid or expired token');
     if (record.expiresAt.getTime() < Date.now()) return res.status(400).send('Invalid or expired token');
