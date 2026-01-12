@@ -21,21 +21,31 @@ async function main() {
         throw new Error('ADMIN_PASSWORD must be at least 12 characters when NODE_ENV=production');
     }
     const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
-    if (existing) {
-        console.log('Admin user already exists:', existing.email);
+    const passwordHash = await bcrypt_1.default.hash(adminPassword, 10);
+    if (!existing) {
+        const admin = await prisma.user.create({
+            data: {
+                email: adminEmail,
+                passwordHash,
+                name: adminName,
+                role: 'ADMIN',
+                verifiedAt: new Date(),
+            },
+        });
+        console.log('Admin created:', admin.email);
+        console.log('Seed complete');
         return;
     }
-    const passwordHash = await bcrypt_1.default.hash(adminPassword, 10);
-    const admin = await prisma.user.create({
+    const updated = await prisma.user.update({
+        where: { email: adminEmail },
         data: {
-            email: adminEmail,
             passwordHash,
-            name: adminName,
+            name: existing.name || adminName,
             role: 'ADMIN',
-            verifiedAt: new Date(),
+            verifiedAt: existing.verifiedAt || new Date(),
         },
     });
-    console.log('Admin created:', admin.email);
+    console.log('Admin updated:', updated.email);
     console.log('Seed complete');
 }
 main()
