@@ -4,7 +4,10 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function main() {
+  const configuredAdminEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
   const demoEmails = ['admin@meechlocs.test', 'user@meechlocs.test']
+    .map((e) => e.toLowerCase())
+    .filter((e) => e && e !== configuredAdminEmail)
   const demoServiceTitles = ['Wash & Style', 'Color Treatment', 'Cut & Trim']
 
   const demoServices = await prisma.service.findMany({
